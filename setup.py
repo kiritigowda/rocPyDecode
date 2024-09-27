@@ -68,7 +68,6 @@ class custom_bdist_wheel(_bdist_wheel):
         plat = 'manylinux_2_28_x86_64'
         return python, abi, plat
 
-
 class BinaryDistribution(Distribution):
     """Distribution which always forces a binary package with platform name"""
     @classmethod
@@ -109,7 +108,7 @@ setup(
     author='AMD',
     license='MIT',
     packages=find_packages(where='@TARGET_NAME@'),
-    package_dir={'amd': '@TARGET_NAME@/pyRocVideoDecode'},
+    package_dir={'pyRocVideoDecode':'pyRocVideoDecode'},
     include_package_data=True,
     ext_modules=[Extension('rocPyDecode',
                     sources=['rocal_pybind.cpp'], 
