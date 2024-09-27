@@ -60,10 +60,13 @@ py::tuple BufferInterface::strides() const {
 }
 
 std::string BufferInterface::dtype() const {
+    std::string value;
     if (m_dlTensor->dtype.bits == 8)
-        return std::string("|u1");
+        value = std::string("|u1");
     else if (m_dlTensor->dtype.bits == 16)
-        return std::string("|u2");
+        value = std::string("|u2");
+    
+    return value;
 }
 
 void *BufferInterface::data() const {
