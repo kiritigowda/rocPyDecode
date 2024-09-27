@@ -107,14 +107,11 @@ setup(
     version='0.2.0' + '.' + get_rocm_rev(),
     author='AMD',
     license='MIT',
-    packages=find_packages(where='@TARGET_NAME@'),
+    packages=['pyRocVideoDecode'],
     package_dir={'pyRocVideoDecode':'pyRocVideoDecode'},
     include_package_data=True,
-    ext_modules=[Extension('rocPyDecode',
-                    sources=['rocal_pybind.cpp'], 
-                    include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', ROCM_PATH+'/include/rocdecode'])],
-    distclass=BinaryDistribution,
-    cmdclass={'bdist_wheel': custom_bdist_wheel,},
+    package_data={"pyRocVideoDecode":["__init__.pyi"]},
+    cmdclass={'bdist_wheel': custom_bdist_wheel,}
 )
 
 # Test built binaries -- TBD: Optional
