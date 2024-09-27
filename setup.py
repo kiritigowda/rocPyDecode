@@ -18,10 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import subprocess
 import os
-from setuptools import setup, find_packages
+import subprocess
+from setuptools import setup, find_packages, Extension
 from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+
+ROCM_PATH = '/opt/rocm'
+if "ROCM_PATH" in os.environ:
+    ROCM_PATH = os.environ.get('ROCM_PATH')
+print("\nROCm PATH set to -- "+ROCM_PATH+"\n")
 
 def get_rev_based_on_os():
     os.system("cat /etc/os-release | grep ID= > os_release")
@@ -62,6 +67,13 @@ class custom_bdist_wheel(_bdist_wheel):
         plat = 'manylinux_2_28_x86_64'
         return python, abi, plat
 
+
+class BinaryDistribution(Distribution):
+    """Distribution which always forces a binary package with platform name"""
+    @classmethod
+    def has_ext_modules(self):
+        return True
+
 # Call CMake to configure and build the project
 build_dir = os.path.join(os.getcwd(), 'build')
 os.makedirs(build_dir, exist_ok=True)
@@ -75,18 +87,35 @@ subprocess.check_call(['cmake', '--build', build_dir, '--config', 'Release', '--
 # Install the built binaries
 subprocess.check_call(['cmake', '--install', build_dir])
 
+#setup(
+#      name='rocPyDecode',
+#      description='AMD ROCm Video Decoder Library',
+#      url='https://github.com/ROCm/rocPyDecode',
+#     version='1.0.0' + '.' + get_rocm_rev(),
+#      author='AMD',
+#     license='MIT License',
+#     packages=['pyRocVideoDecode'],
+#      package_dir={'pyRocVideoDecode':'pyRocVideoDecode'},
+#      package_data={"pyRocVideoDecode":["__init__.pyi"]},
+#      cmdclass={'bdist_wheel': custom_bdist_wheel,},
+#      )
+
 setup(
-      name='rocPyDecode',
-      description='AMD ROCm Video Decoder Library',
-      url='https://github.com/ROCm/rocPyDecode',
-      version='1.0.0' + '.' + get_rocm_rev(),
-      author='AMD',
-      license='MIT License',
-      packages=['pyRocVideoDecode'],
-      package_dir={'pyRocVideoDecode':'pyRocVideoDecode'},
-      package_data={"pyRocVideoDecode":["__init__.pyi"]},
-      cmdclass={'bdist_wheel': custom_bdist_wheel,},
-      )
+    name='rocpydecode',
+    description='AMD ROCm Video Decoder Library Python Bindings',
+    url='https://github.com/ROCm/rocPyDecode',
+    version='0.2.0' + '.' + get_rocm_rev(),
+    author='AMD',
+    license='MIT',
+    packages=find_packages(where='@TARGET_NAME@'),
+    package_dir={'amd': '@TARGET_NAME@/pyRocVideoDecode'},
+    include_package_data=True,
+    ext_modules=[Extension('rocPyDecode',
+                    sources=['rocal_pybind.cpp'], 
+                    include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
+    distclass=BinaryDistribution,
+    cmdclass={'bdist_wheel': custom_bdist_wheel,},
+)
 
 # Test built binaries -- TBD: Optional
 # subprocess.check_call(['ctest', '--test-dir', build_dir, '-VV'])

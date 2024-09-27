@@ -22,14 +22,21 @@
 ################################################################################
 
 cmake_minimum_required (VERSION 3.12)
+set(VERSION "0.2.0")
 
-set(VERSION "0.1.0")
 set(CMAKE_CXX_STANDARD 17)
 
 # Set Project Version and Language
 project(rocPyDecode VERSION ${VERSION} LANGUAGES CXX)
 
-set(TARGET_NAME rocPyDecode)
+set(TARGET_NAME rocpydecode)
+
+set(CMAKE_INSTALL_LIBDIR "lib" CACHE STRING "Library install directory")
+include(GNUInstallDirs)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR})
 
 # ROCM Path
 if(DEFINED ENV{ROCM_PATH})
@@ -136,7 +143,6 @@ if(HIP_FOUND AND rocDecode_FOUND AND pybind11_FOUND AND Python3_FOUND AND FFMPEG
     file(GLOB_RECURSE sources src/*.cpp  ${ROCM_PATH}/share/rocdecode/utils/*.cpp ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/*.cpp)
 
     pybind11_add_module(${TARGET_NAME} MODULE ${sources})
-
     target_link_libraries(${TARGET_NAME} PRIVATE ${LINK_LIBRARY_LIST})
     message("-- ${White}rocPyDecode -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
     message("-- ${White}rocPyDecode -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
@@ -159,11 +165,50 @@ if(HIP_FOUND AND rocDecode_FOUND AND pybind11_FOUND AND Python3_FOUND AND FFMPEG
         #to maintain folder structure
         file(RELATIVE_PATH ITEM_PATH_REL ${CMAKE_CURRENT_SOURCE_DIR} ${filename})
         message(STATUS "Copying ${filename} to ${TARGET_NAME}/${ITEM_PATH_REL}")
-        configure_file("${filename}" "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${ITEM_PATH_REL}" COPYONLY)
+        configure_file("${filename}" "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${ITEM_PATH_REL}" @ONLY)
     endforeach (filename)
 
+    CONFIGURE_FILE(setup.py ${CMAKE_BINARY_DIR}/setup.py @ONLY)
+    CONFIGURE_FILE(getrocPyDecodewheelname.py ${CMAKE_BINARY_DIR}/getrocPyDecodewheelname.py @ONLY)
+
+    foreach (filename ${include})
+        get_filename_component(target "${filename}" REALPATH)
+        #to maintain folder structure
+        file(RELATIVE_PATH ITEM_PATH_REL ${CMAKE_CURRENT_SOURCE_DIR} ${filename})
+        message(STATUS "Copying ${filename} to ${TARGET_NAME}/${ITEM_PATH_REL}")
+        configure_file("${filename}" "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${ITEM_PATH_REL}" @ONLY)
+    endforeach (filename)
+
+    foreach (filename ${sources})
+        get_filename_component(target "${filename}" REALPATH)
+        #to maintain folder structure
+        file(RELATIVE_PATH ITEM_PATH_REL ${CMAKE_CURRENT_SOURCE_DIR} ${filename})
+        message(STATUS "Copying ${filename} to ${TARGET_NAME}/${ITEM_PATH_REL}")
+        configure_file("${filename}" "${CMAKE_BINARY_DIR}/${TARGET_NAME}/${ITEM_PATH_REL}" @ONLY)
+    endforeach (filename)
+
+    execute_process(COMMAND "${Python3_EXECUTABLE}" getrocPyDecodewheelname.py OUTPUT_VARIABLE PY_WHEELFILE
+    WORKING_DIRECTORY "${CMAKE_BINARY_DIR}")
+    message(STATUS "Detected roPyDecode Python wheel filename ${PY_WHEELFILE}")
+    
+    add_custom_target(PyPackageBuild
+        COMMAND "${Python3_EXECUTABLE}" -m pip wheel .
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        COMMENT "Building python wheel package"
+    )
+
+    add_dependencies(PyPackageBuild ${TARGET_NAME})
+
+    set_target_properties(PyPackageBuild PROPERTIES Package_Name ${PY_WHEELFILE})
+    add_custom_target(PyPackageInstall
+        COMMAND "${Python3_EXECUTABLE}" -m pip install --upgrade --force-reinstall --no-deps "${PY_WHEELFILE}"
+        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        COMMENT "Installing wheel file"
+    )
+    add_dependencies(PyPackageInstall PyPackageBuild)
+
     #install rocPyDecode pybind libs
-    install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX_PYTHON} COMPONENT runtime)
+    install(FILES ${CMAKE_BINARY_DIR}/${TARGET_NAME}/${CMAKE_INSTALL_LIBDIR}/${TARGET_PYMODULE_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX_PYTHON})
 
     message("-- ${Green}ROCm Video Decode Library Python Binding - rocPyDecode module added ${ColourReset}")
     message("-- ${BoldBlue}rocPyDecode Version -- ${VERSION}${ColourReset}")
