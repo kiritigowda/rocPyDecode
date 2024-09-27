@@ -76,11 +76,11 @@ class BinaryDistribution(Distribution):
         return True
 
 # Call CMake to configure and build the project
-build_dir = os.path.join(os.getcwd(), 'build')
-os.makedirs(build_dir, exist_ok=True)
-cmake_args=["cmake", ".", "-B"+build_dir, "-H"+os.getcwd()]
+#build_dir = os.path.join(os.getcwd(), 'build')
+#os.makedirs(build_dir, exist_ok=True)
+#cmake_args=["cmake", ".", "-B"+build_dir, "-H"+os.getcwd()]
 
-subprocess.check_call(cmake_args,cwd=os.getcwd())
+#subprocess.check_call(cmake_args,cwd=os.getcwd())
 
 # Invoke cmake --build to build the project
 #subprocess.check_call(['cmake', '--build', build_dir, '--config', 'Release', '--parallel'])
