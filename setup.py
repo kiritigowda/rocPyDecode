@@ -107,8 +107,8 @@ setup(
     version='0.2.0' + '.' + get_rocm_rev(),
     author='AMD',
     license='MIT',
-    packages=['pyRocVideoDecode'],
-    package_dir={'pyRocVideoDecode':'pyRocVideoDecode'},
+    packages=['rocpydecode'],
+    package_dir={'rocpydecode':'pyRocVideoDecode'},
     include_package_data=True,
     package_data={"pyRocVideoDecode":["__init__.pyi"]},
     cmdclass={'bdist_wheel': custom_bdist_wheel,}
