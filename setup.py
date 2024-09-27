@@ -21,6 +21,7 @@
 import os
 import subprocess
 from setuptools import setup, find_packages, Extension
+from setuptools.dist import Distribution
 from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
 ROCM_PATH = '/opt/rocm'
