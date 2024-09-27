@@ -112,7 +112,7 @@ setup(
     include_package_data=True,
     ext_modules=[Extension('rocPyDecode',
                     sources=['rocal_pybind.cpp'], 
-                    include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', '@PROJECT_SOURCE_DIR@/../rocAL/include/api'])],
+                    include_dirs=['@pybind11_INCLUDE_DIRS@', ROCM_PATH+'/include', ROCM_PATH+'/include/rocdecode'])],
     distclass=BinaryDistribution,
     cmdclass={'bdist_wheel': custom_bdist_wheel,},
 )
