@@ -140,9 +140,10 @@ if(HIP_FOUND AND rocDecode_FOUND AND pybind11_FOUND AND Python3_FOUND AND FFMPEG
 
     file(GLOB_RECURSE pyfiles pyRocVideoDecode/*.py pyRocVideoDecode/*.pyi)
     file(GLOB_RECURSE include src/*.h)
-    file(GLOB_RECURSE sources src/*.cpp  ${ROCM_PATH}/share/rocdecode/utils/*.cpp ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/*.cpp)
+    file(GLOB_RECURSE sources src/*.cpp)
+    file(GLOB_RECURSE rocDecodesources ${ROCM_PATH}/share/rocdecode/utils/*.cpp ${ROCM_PATH}/share/rocdecode/utils/rocvideodecode/*.cpp)
 
-    pybind11_add_module(${TARGET_NAME} MODULE ${sources})
+    pybind11_add_module(${TARGET_NAME} MODULE ${sources} ${rocDecodesources})
     target_link_libraries(${TARGET_NAME} PRIVATE ${LINK_LIBRARY_LIST})
     message("-- ${White}rocPyDecode -- Link Libraries: ${LINK_LIBRARY_LIST}${ColourReset}")
     message("-- ${White}rocPyDecode -- CMAKE_CXX_FLAGS:${CMAKE_CXX_FLAGS}${ColourReset}")
